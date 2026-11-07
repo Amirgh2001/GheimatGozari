@@ -1,14 +1,29 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hashPassword } from './auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isVercel = Boolean(process.env.VERCEL);
 const DATA_DIR = isVercel ? '/tmp' : path.join(__dirname, 'data');
-const SEED_FILE = path.join(__dirname, 'data', 'restaurant_data.json');
 const DATA_FILE = path.join(DATA_DIR, 'restaurant_data.json');
+
+export function findSeedFile() {
+  const candidates = [
+    path.join(__dirname, 'data', 'restaurant_data.json'),
+    path.join(__dirname, '..', 'server', 'data', 'restaurant_data.json'),
+    path.join(process.cwd(), 'server', 'data', 'restaurant_data.json'),
+    path.join(process.cwd(), 'data', 'restaurant_data.json'),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      return c;
+    }
+  }
+  return path.join(__dirname, 'data', 'restaurant_data.json');
+}
+
+const SEED_FILE = findSeedFile();
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -20,8 +35,6 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 export function getDefaultSeedData() {
-  const adminAuth = hashPassword('admin123456');
-
   return {
     meta: {
       appName: 'سامانه جامع قیمت‌گذاری و رسپی‌بوک رستوران',
@@ -32,8 +45,8 @@ export function getDefaultSeedData() {
     manager: {
       username: 'admin',
       fullName: 'مدیر ارشد مجموعه',
-      salt: adminAuth.salt,
-      passwordHash: adminAuth.hash,
+      salt: 'a8274d81267b14d2e1b1d1bc67a14917',
+      passwordHash: 'db13e2bf658825c34537c35272370ae6a9926eeab8650df646dff21e1069ffeaeb912ce2be098c48a7df5fa590916b9b398642cae4eefea985cb938221b069d5',
       phone: '09123456789',
       restaurantName: 'رستوران و کیچن تخصصی ملل',
     },

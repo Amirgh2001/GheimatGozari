@@ -5,9 +5,10 @@ import crypto from 'node:crypto';
  * Secure, zero external dependencies, robust session management.
  */
 
-// Active manager sessions: token -> { createdAt, expiresAt }
+// Active manager sessions cache: token -> payload (for fast local lookups)
 const activeSessions = new Map();
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const AUTH_SECRET = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'gheimatgozari-restaurant-auth-signature-key-2026-prod';
 
 /**
  * Hash password with salt using PBKDF2
@@ -26,34 +27,84 @@ export function verifyPassword(password, salt, storedHash) {
 }
 
 /**
- * Create a new session token
+ * Sign payload string using HMAC-SHA256
+ */
+function signPayload(payloadStr) {
+  return crypto.createHmac('sha256', AUTH_SECRET).update(payloadStr).digest('base64url');
+}
+
+/**
+ * Create a new signed session token (serverless compatible across all instances)
  */
 export function createSession(username) {
-  const token = crypto.randomBytes(32).toString('hex');
   const now = Date.now();
-  const session = {
+  const payload = {
     username,
+    nonce: crypto.randomBytes(16).toString('hex'),
     createdAt: now,
     expiresAt: now + SESSION_TTL_MS,
   };
-  activeSessions.set(token, session);
+
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = signPayload(payloadB64);
+  const token = `${payloadB64}.${signature}`;
+
+  activeSessions.set(token, payload);
   return token;
 }
 
 /**
- * Validate a session token
+ * Validate a session token using stateless HMAC verification and in-memory cache
  */
 export function validateSession(token) {
-  if (!token) return null;
-  const session = activeSessions.get(token);
-  if (!session) return null;
+  if (!token || typeof token !== 'string') return null;
 
-  if (Date.now() > session.expiresAt) {
-    activeSessions.delete(token);
+  // 1. Check in-memory cache first
+  const cached = activeSessions.get(token);
+  if (cached) {
+    if (Date.now() > cached.expiresAt) {
+      activeSessions.delete(token);
+      return null;
+    }
+    return cached;
+  }
+
+  // 2. Stateless cryptographic HMAC verification
+  const dotIndex = token.lastIndexOf('.');
+  if (dotIndex === -1) return null;
+
+  const payloadB64 = token.substring(0, dotIndex);
+  const signature = token.substring(dotIndex + 1);
+
+  if (!payloadB64 || !signature) return null;
+
+  const expectedSignature = signPayload(payloadB64);
+
+  const sigBuf = Buffer.from(signature);
+  const expBuf = Buffer.from(expectedSignature);
+
+  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
     return null;
   }
 
-  return session;
+  try {
+    const jsonStr = Buffer.from(payloadB64, 'base64url').toString('utf8');
+    const payload = JSON.parse(jsonStr);
+
+    if (!payload || !payload.username || !payload.expiresAt) {
+      return null;
+    }
+
+    if (Date.now() > payload.expiresAt) {
+      return null;
+    }
+
+    // Cache in current instance for rapid subsequent requests
+    activeSessions.set(token, payload);
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 /**

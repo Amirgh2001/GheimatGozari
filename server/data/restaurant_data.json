@@ -2,7 +2,7 @@
   "meta": {
     "appName": "سامانه جامع قیمت‌گذاری و رسپی‌بوک رستوران",
     "version": "1.0.0",
-    "lastUpdated": "2026-11-07T17:19:55.762Z",
+    "lastUpdated": "2026-11-07T17:57:32.622Z",
     "defaultProfitMultiplier": 2.5
   },
   "manager": {
@@ -223,6 +223,58 @@
       "wastagePercentage": 5,
       "customConversions": [],
       "notes": ""
+    },
+    {
+      "id": "mat-1794072317935",
+      "name": "گوشت چرخ کرده پیتزا",
+      "category": "پروتئین",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 1800000,
+      "wastagePercentage": 5,
+      "customConversions": [],
+      "notes": ""
+    },
+    {
+      "id": "mat-1794072447092",
+      "name": "پیاز",
+      "category": "سبزیجات و صیفی‌جات",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 50000,
+      "wastagePercentage": 0,
+      "customConversions": [],
+      "notes": ""
+    },
+    {
+      "id": "mat-1794074141705",
+      "name": "کرافت بزرگ",
+      "category": "پکیجینگ",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 520000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "کیلوگرم",
+          "toUnit": "عدد",
+          "factor": 22
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "mat-1794074179256",
+      "name": "کرافت کوچک",
+      "category": "پکیجینگ",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 550000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "کیلوگرم",
+          "toUnit": "عدد",
+          "factor": 31
+        }
+      ],
+      "notes": ""
     }
   ],
   "intermediateGoods": [
@@ -323,6 +375,62 @@
           "unit": "گرم"
         }
       ]
+    },
+    {
+      "id": "inter-1794072800586",
+      "name": "میت بال",
+      "category": "نیمه‌آماده گوشتی",
+      "batchDescription": "",
+      "yieldQuantity": 945,
+      "yieldUnit": "گرم",
+      "cookingLossPercentage": 30,
+      "outputUnits": [
+        {
+          "id": "out-1794072626706-43nq",
+          "name": "پورشن میت بال رومن",
+          "amount": 1,
+          "unit": "گرم"
+        },
+        {
+          "id": "out-1794072630006-ack8",
+          "name": "پورشن میت بال ناپل",
+          "amount": 1,
+          "unit": "گرم"
+        }
+      ],
+      "customConversions": [],
+      "ingredients": [
+        {
+          "type": "raw",
+          "materialId": "mat-1794072317935",
+          "quantity": 1,
+          "unit": "کیلوگرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1794072447092",
+          "quantity": 200,
+          "unit": "گرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1794071033348",
+          "quantity": 50,
+          "unit": "گرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1794071068234",
+          "quantity": 50,
+          "unit": "گرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793565899799",
+          "quantity": 50,
+          "unit": "گرم"
+        }
+      ]
     }
   ],
   "products": [
@@ -388,6 +496,48 @@
         {
           "materialId": "mat-1793559544650",
           "quantity": 2,
+          "unit": "عدد"
+        }
+      ]
+    },
+    {
+      "id": "prod-1794073290824",
+      "name": "پیتزا ناپل گوشت و قارچ(میت بال)",
+      "category": "پیتزا",
+      "description": "",
+      "instructions": "",
+      "profitMultiplier": 2.5,
+      "recipeItems": [
+        {
+          "type": "intermediate",
+          "intermediateId": "inter-1793564018659",
+          "quantity": 1,
+          "unit": "چونه خمیر ناپل"
+        },
+        {
+          "type": "intermediate",
+          "intermediateId": "inter-1794072800586",
+          "quantity": 1,
+          "unit": "پورشن میت بال ناپل"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793564249313",
+          "quantity": 100,
+          "unit": "گرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793559615668",
+          "quantity": 5,
+          "unit": "گرم"
+        }
+      ],
+      "dineInPackaging": [],
+      "takeoutPackaging": [
+        {
+          "materialId": "mat-1794074141705",
+          "quantity": 1,
           "unit": "عدد"
         }
       ]
@@ -600,6 +750,16 @@
       "id": "u-1794065619539",
       "name": "فیله مرغ ناپولیتن",
       "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-1794072012961",
+      "name": "پورشن میت بال رومن",
+      "category": "تعدادی"
+    },
+    {
+      "id": "u-1794072025194",
+      "name": "پورشن میت بال ناپل",
+      "category": "تعدادی"
     }
   ],
   "conversionChains": [
@@ -667,6 +827,34 @@
         },
         {
           "amount": 130,
+          "unit": "گرم"
+        }
+      ]
+    },
+    {
+      "id": "chain-1794072833531",
+      "title": "تبدیل پورشن میت بال رومن به گرم",
+      "steps": [
+        {
+          "amount": 1,
+          "unit": "پورشن میت بال رومن"
+        },
+        {
+          "amount": 90,
+          "unit": "گرم"
+        }
+      ]
+    },
+    {
+      "id": "chain-1794072859379",
+      "title": "تبدیل پورشن میت بال ناپل به گرم",
+      "steps": [
+        {
+          "amount": 1,
+          "unit": "پورشن میت بال ناپل"
+        },
+        {
+          "amount": 140,
           "unit": "گرم"
         }
       ]
