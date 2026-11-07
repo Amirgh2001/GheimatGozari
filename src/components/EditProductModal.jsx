@@ -343,6 +343,10 @@ export default function EditProductModal({
                     ? safeIntermediateGoods.find((i) => i && i.id === item.intermediateId)
                     : safeRawMaterials.find((m) => m && m.id === item.materialId);
 
+                  const matchedOu = isInter && entity?.outputUnits
+                    ? entity.outputUnits.find((ou) => ou && ou.name && ou.name.trim() === item.unit?.trim())
+                    : null;
+
                   let matchedWeight = null;
                   if (isInter && entity) {
                     const conv = convertUnit(Number(item.quantity), item.unit, entity.yieldUnit || 'گرم', entity.customConversions || [], globalConversions);
