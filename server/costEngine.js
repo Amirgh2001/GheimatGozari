@@ -925,6 +925,11 @@ export function calculateProductCost(product, allIntermediatesMap, allMaterialsM
     grossProfitMarginDineIn,
     grossProfitMarginTakeout,
 
+    // Definition Items for Editing
+    recipeItems: product.recipeItems || [],
+    dineInPackaging: product.dineInPackaging || [],
+    takeoutPackaging: product.takeoutPackaging || [],
+
     // Breakdowns
     recipeBreakdown: recipeWithPercentage,
     dineInPackagingBreakdown,

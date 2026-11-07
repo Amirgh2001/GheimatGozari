@@ -81,35 +81,67 @@ export default function EditProductModal({
 
   useEffect(() => {
     if (product && product.id) {
+      // Robust resolution for recipeItems:
+      let initialRecipeItems = [];
+      if (Array.isArray(product.recipeItems) && product.recipeItems.length > 0) {
+        initialRecipeItems = product.recipeItems.map((item) => ({
+          type: item.type || (item.intermediateId ? 'intermediate' : 'raw'),
+          materialId: item.materialId || (item.type === 'raw' ? item.id : undefined),
+          intermediateId: item.intermediateId || (item.type === 'intermediate' ? item.id : undefined),
+          quantity: item.quantity,
+          unit: item.unit,
+        }));
+      } else if (Array.isArray(product.recipeBreakdown) && product.recipeBreakdown.length > 0) {
+        initialRecipeItems = product.recipeBreakdown.map((item) => ({
+          type: item.type || (item.intermediateId ? 'intermediate' : 'raw'),
+          materialId: item.type === 'raw' ? (item.materialId || item.id) : undefined,
+          intermediateId: item.type === 'intermediate' ? (item.intermediateId || item.id) : undefined,
+          quantity: item.quantity,
+          unit: item.unit,
+        }));
+      }
+
+      // Robust resolution for dineInPackaging:
+      let initialDineInPkg = [];
+      if (Array.isArray(product.dineInPackaging) && product.dineInPackaging.length > 0) {
+        initialDineInPkg = product.dineInPackaging.map((pkg) => ({
+          materialId: pkg.materialId || pkg.id,
+          quantity: pkg.quantity || 1,
+          unit: pkg.unit || 'عدد',
+        }));
+      } else if (Array.isArray(product.dineInPackagingBreakdown) && product.dineInPackagingBreakdown.length > 0) {
+        initialDineInPkg = product.dineInPackagingBreakdown.map((pkg) => ({
+          materialId: pkg.materialId || pkg.id,
+          quantity: pkg.quantity || 1,
+          unit: pkg.unit || 'عدد',
+        }));
+      }
+
+      // Robust resolution for takeoutPackaging:
+      let initialTakeoutPkg = [];
+      if (Array.isArray(product.takeoutPackaging) && product.takeoutPackaging.length > 0) {
+        initialTakeoutPkg = product.takeoutPackaging.map((pkg) => ({
+          materialId: pkg.materialId || pkg.id,
+          quantity: pkg.quantity || 1,
+          unit: pkg.unit || 'عدد',
+        }));
+      } else if (Array.isArray(product.takeoutPackagingBreakdown) && product.takeoutPackagingBreakdown.length > 0) {
+        initialTakeoutPkg = product.takeoutPackagingBreakdown.map((pkg) => ({
+          materialId: pkg.materialId || pkg.id,
+          quantity: pkg.quantity || 1,
+          unit: pkg.unit || 'عدد',
+        }));
+      }
+
       setFormData({
         name: product.name || '',
         category: product.category || defaultCategory,
         description: product.description || '',
         instructions: product.instructions || '',
         profitMultiplier: product.profitMultiplier !== undefined ? String(product.profitMultiplier) : '2.5',
-        recipeItems: product.recipeItems
-          ? product.recipeItems.map((item) => ({
-              type: item.type || (item.intermediateId ? 'intermediate' : 'raw'),
-              materialId: item.materialId,
-              intermediateId: item.intermediateId,
-              quantity: item.quantity,
-              unit: item.unit,
-            }))
-          : [],
-        dineInPackaging: product.dineInPackaging
-          ? product.dineInPackaging.map((pkg) => ({
-              materialId: pkg.materialId || pkg.id,
-              quantity: pkg.quantity || 1,
-              unit: pkg.unit || 'عدد',
-            }))
-          : [],
-        takeoutPackaging: product.takeoutPackaging
-          ? product.takeoutPackaging.map((pkg) => ({
-              materialId: pkg.materialId || pkg.id,
-              quantity: pkg.quantity || 1,
-              unit: pkg.unit || 'عدد',
-            }))
-          : [],
+        recipeItems: initialRecipeItems,
+        dineInPackaging: initialDineInPkg,
+        takeoutPackaging: initialTakeoutPkg,
       });
     } else {
       setFormData({
