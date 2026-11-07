@@ -61,9 +61,13 @@ if (fs.existsSync(DIST_DIR)) {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(`🚀 سامانه قیمت‌گذاری و رسپی‌بوک رستوران در حال اجراست.`);
-  console.log(`📡 سرور API: http://localhost:${PORT}`);
-  console.log(`=======================================================`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`=======================================================`);
+    console.log(`🚀 سامانه قیمت‌گذاری و رسپی‌بوک رستوران در حال اجراست.`);
+    console.log(`📡 سرور API: http://localhost:${PORT}`);
+    console.log(`=======================================================`);
+  });
+}
+
+export default app;

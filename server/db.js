@@ -5,12 +5,18 @@ import { hashPassword } from './auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_DIR = path.join(__dirname, 'data');
+const isVercel = Boolean(process.env.VERCEL);
+const DATA_DIR = isVercel ? '/tmp' : path.join(__dirname, 'data');
+const SEED_FILE = path.join(__dirname, 'data', 'restaurant_data.json');
 const DATA_FILE = path.join(DATA_DIR, 'restaurant_data.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (err) {
+    console.warn('Could not create DATA_DIR:', err);
+  }
 }
 
 export function getDefaultSeedData() {
@@ -128,23 +134,29 @@ class RestaurantDatabase {
       if (fs.existsSync(DATA_FILE)) {
         const content = fs.readFileSync(DATA_FILE, 'utf-8');
         this.data = JSON.parse(content);
-
-        // Ensure new collections exist even on existing database files
-        const defaults = getDefaultSeedData();
-        if (!this.data.categories || this.data.categories.length === 0) {
-          this.data.categories = defaults.categories;
+      } else if (fs.existsSync(SEED_FILE)) {
+        const content = fs.readFileSync(SEED_FILE, 'utf-8');
+        this.data = JSON.parse(content);
+        if (isVercel) {
+          this.save();
         }
-        if (!this.data.purchaseUnits || this.data.purchaseUnits.length === 0) {
-          this.data.purchaseUnits = defaults.purchaseUnits;
-        }
-        if (!this.data.conversionChains || this.data.conversionChains.length === 0) {
-          this.data.conversionChains = defaults.conversionChains;
-        }
-        this.save();
       } else {
         this.data = getDefaultSeedData();
         this.save();
       }
+
+      // Ensure new collections exist even on existing database files
+      const defaults = getDefaultSeedData();
+      if (!this.data.categories || this.data.categories.length === 0) {
+        this.data.categories = defaults.categories;
+      }
+      if (!this.data.purchaseUnits || this.data.purchaseUnits.length === 0) {
+        this.data.purchaseUnits = defaults.purchaseUnits;
+      }
+      if (!this.data.conversionChains || this.data.conversionChains.length === 0) {
+        this.data.conversionChains = defaults.conversionChains;
+      }
+      this.save();
     } catch (err) {
       console.error('Error reading restaurant database, initializing seed:', err);
       this.data = getDefaultSeedData();
@@ -154,6 +166,9 @@ class RestaurantDatabase {
 
   save() {
     try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
       this.data.meta.lastUpdated = new Date().toISOString();
       const tempPath = `${DATA_FILE}.tmp.${Date.now()}`;
       fs.writeFileSync(tempPath, JSON.stringify(this.data, null, 2), 'utf-8');
@@ -167,14 +182,19 @@ class RestaurantDatabase {
 
   // Backup data
   backup() {
-    const backupDir = path.join(DATA_DIR, 'backups');
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir, { recursive: true });
+    try {
+      const backupDir = path.join(DATA_DIR, 'backups');
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupFile = path.join(backupDir, `backup_${timestamp}.json`);
+      fs.writeFileSync(backupFile, JSON.stringify(this.data, null, 2), 'utf-8');
+      return backupFile;
+    } catch (err) {
+      console.warn('Backup could not be written:', err);
+      return null;
     }
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupFile = path.join(backupDir, `backup_${timestamp}.json`);
-    fs.writeFileSync(backupFile, JSON.stringify(this.data, null, 2), 'utf-8');
-    return backupFile;
   }
 
   // Reset to default
