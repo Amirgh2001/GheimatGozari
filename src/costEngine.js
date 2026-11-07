@@ -181,6 +181,13 @@ export function getValidUnitsForIntermediate(intermediate) {
   if (!intermediate) return ['گرم', 'کیلوگرم', 'عدد'];
   const unitsSet = new Set();
 
+  // Add custom output units (portions) first so they appear prominently
+  for (const ou of intermediate.outputUnits || []) {
+    if (ou && ou.name && ou.name.trim()) {
+      unitsSet.add(ou.name.trim());
+    }
+  }
+
   const yUnit = intermediate.yieldUnit || 'گرم';
   unitsSet.add(yUnit);
 
@@ -395,7 +402,27 @@ export function calculateBatchYield(
       }
     } else if (ing.type === 'intermediate' || ing.intermediateId) {
       const child = allIntermediatesMap.get(ing.intermediateId || ing.id);
-      const convertedG = convertUnit(qty, ing.unit, 'گرم', child?.customConversions || [], globalConversions);
+      let effectiveQty = qty;
+      let effectiveUnit = ing.unit;
+
+      const childOutput = (child?.outputUnits || []).find(
+        (ou) => ou && ou.name && ou.name.trim() === ing.unit?.trim()
+      );
+      if (childOutput) {
+        effectiveQty = qty * Number(childOutput.amount || childOutput.weight || 1);
+        effectiveUnit = childOutput.unit || child?.yieldUnit || 'گرم';
+      }
+
+      const customConvs = [
+        ...(child?.customConversions || []),
+        ...(child?.outputUnits || []).map((ou) => ({
+          fromUnit: ou.name,
+          toUnit: ou.unit || child?.yieldUnit || 'گرم',
+          factor: Number(ou.amount || ou.weight || 1),
+        })),
+      ];
+
+      const convertedG = convertUnit(effectiveQty, effectiveUnit, 'گرم', customConvs, globalConversions);
       if (convertedG > 0) {
         totalRawWeightGrams += convertedG;
         hasWeightItems = true;

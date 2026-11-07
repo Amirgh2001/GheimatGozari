@@ -174,6 +174,51 @@ export default function IntermediatesView({
                   </div>
                 </div>
 
+                {/* Output Units / Portions Badge Box */}
+                {((item.calculatedOutputUnits && item.calculatedOutputUnits.length > 0) || (item.outputUnits && item.outputUnits.length > 0)) && (
+                  <div className="px-5 py-3 bg-amber-50/60 border-b border-amber-100 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-xs font-bold text-amber-950">
+                      <span className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                        <span>واحدهای خروجی (پورشن‌ها و چونه‌ها):</span>
+                      </span>
+                      <span className="text-[10px] text-amber-800 font-normal">
+                        قابل استفاده در رسپی محصولات نهایی
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(item.calculatedOutputUnits || item.outputUnits || []).map((ou, oIdx) => {
+                        const portionAmount = Number(ou.amount || ou.weight) || 1;
+                        const portionUnit = ou.unit || item.yieldUnit || 'گرم';
+                        const costPerPortion = ou.costPerPortion !== undefined
+                          ? ou.costPerPortion
+                          : Math.round(portionAmount * (item.unitCost || 0));
+                        const countPerBatch = ou.countPerBatch !== undefined
+                          ? ou.countPerBatch
+                          : (portionAmount > 0 && item.yieldQuantity > 0 ? Number((item.yieldQuantity / portionAmount).toFixed(1)) : 0);
+
+                        return (
+                          <div
+                            key={ou.id || oIdx}
+                            className="bg-white border border-amber-200/90 rounded-lg px-2.5 py-1 text-xs shadow-2xs flex items-center gap-2"
+                          >
+                            <span className="font-extrabold text-slate-800">{ou.name}</span>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              ({toPersianDigits(portionAmount)} {portionUnit})
+                            </span>
+                            <span className="text-amber-700 font-bold font-mono text-[11px]">
+                              ← {formatToman(costPerPortion)}
+                            </span>
+                            <span className="text-[10px] bg-amber-100/90 text-amber-900 font-mono px-1.5 py-0.2 rounded font-semibold">
+                              {toPersianDigits(countPerBatch)} در هر بچ
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Ingredients Breakdown */}
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                   <div>

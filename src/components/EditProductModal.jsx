@@ -310,12 +310,16 @@ export default function EditProductModal({
                     ? safeIntermediateGoods.find((i) => i && i.id === item.intermediateId)
                     : safeRawMaterials.find((m) => m && m.id === item.materialId);
 
+                  const matchedOu = isInter && entity?.outputUnits
+                    ? entity.outputUnits.find((ou) => ou && ou.name && ou.name.trim() === item.unit?.trim())
+                    : null;
+
                   return (
                     <div
                       key={idx}
                       className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-slate-200 text-xs"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                             isInter ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-800'
@@ -324,9 +328,14 @@ export default function EditProductModal({
                           {isInter ? 'کالای واسط' : 'ماده خام'}
                         </span>
                         <strong className="text-slate-800">{entity ? entity.name : 'قلم حذف شده'}</strong>
-                        <span className="text-slate-500 font-mono">
+                        <span className="text-slate-600 font-mono font-bold">
                           ({toPersianDigits(item.quantity)} {item.unit})
                         </span>
+                        {matchedOu && (
+                          <span className="text-[11px] text-amber-800 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-mono">
+                            معادل {toPersianDigits(Number(item.quantity) * Number(matchedOu.amount))} {matchedOu.unit || entity?.yieldUnit || 'گرم'}
+                          </span>
+                        )}
                       </div>
                       <button
                         type="button"
@@ -368,7 +377,11 @@ export default function EditProductModal({
                     const i = safeIntermediateGoods.find((x) => x && x.id === id);
                     if (i) {
                       const units = getValidUnitsForIntermediate(i);
-                      defUnit = units.includes('گرم') ? 'گرم' : units[0] || i.yieldUnit;
+                      if (i.outputUnits && i.outputUnits.length > 0 && i.outputUnits[0]?.name) {
+                        defUnit = i.outputUnits[0].name.trim();
+                      } else {
+                        defUnit = units.includes('گرم') ? 'گرم' : units[0] || i.yieldUnit;
+                      }
                     }
                   } else {
                     const m = safeRawMaterials.find((x) => x && x.id === id);
@@ -379,14 +392,14 @@ export default function EditProductModal({
                   }
                   setNewRecipeItem({ ...newRecipeItem, id, unit: defUnit });
                 }}
-                className="flex-1 min-w-[160px] bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800"
+                className="flex-1 min-w-[160px] bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
               >
                 <option value="">-- انتخاب قلم رسپی --</option>
                 {newRecipeItem.type === 'intermediate'
                   ? safeIntermediateGoods.map((i) =>
                       i ? (
                         <option key={i.id} value={i.id}>
-                          {i.name} (واحد: {i.yieldUnit || defaultUnit})
+                          {i.name} (واحد خروجی: {i.yieldUnit || defaultUnit}{i.outputUnits && i.outputUnits.length > 0 ? ` | ${i.outputUnits.map(ou => ou.name).join('، ')}` : ''})
                         </option>
                       ) : null
                     )
@@ -403,25 +416,35 @@ export default function EditProductModal({
                 placeholder="مقدار تایپی"
                 value={newRecipeItem.quantity}
                 onChange={(val) => setNewRecipeItem({ ...newRecipeItem, quantity: val })}
-                className="w-24 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800"
+                className="w-24 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 font-mono text-center"
               />
 
               <select
                 value={newRecipeItem.unit}
                 onChange={(e) => setNewRecipeItem({ ...newRecipeItem, unit: e.target.value })}
-                className="w-24 bg-white border border-amber-300 rounded-lg px-2 py-1.5 text-xs text-slate-900 font-bold cursor-pointer"
+                className="w-32 bg-white border border-amber-300 rounded-lg px-2 py-1.5 text-xs text-slate-900 font-bold cursor-pointer"
               >
-                {validUnitsForNewItem.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
+                {validUnitsForNewItem.map((u) => {
+                  let label = u;
+                  if (newRecipeItem.type === 'intermediate') {
+                    const inter = safeIntermediateGoods.find((x) => x && x.id === newRecipeItem.id);
+                    const ou = inter?.outputUnits?.find((o) => o && o.name && o.name.trim() === u.trim());
+                    if (ou) {
+                      label = `${u} (${toPersianDigits(ou.amount)} ${ou.unit})`;
+                    }
+                  }
+                  return (
+                    <option key={u} value={u}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
 
               <button
                 type="button"
                 onClick={handleAddRecipeItem}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition"
+                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition shadow-2xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>افزودن به رسپی</span>

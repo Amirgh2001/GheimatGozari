@@ -2,7 +2,7 @@
   "meta": {
     "appName": "سامانه جامع قیمت‌گذاری و رسپی‌بوک رستوران",
     "version": "1.0.0",
-    "lastUpdated": "2026-11-07T14:08:18.963Z",
+    "lastUpdated": "2026-11-07T14:58:20.424Z",
     "defaultProfitMultiplier": 2.5
   },
   "manager": {
@@ -187,6 +187,22 @@
         }
       ],
       "notes": "مشکدار"
+    },
+    {
+      "id": "mat-1794061342617",
+      "name": "آب",
+      "category": "سایر",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 1,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "کیلوگرم",
+          "toUnit": "لیتر",
+          "factor": 1
+        }
+      ],
+      "notes": ""
     }
   ],
   "intermediateGoods": [
@@ -225,9 +241,9 @@
       "name": "خمیر ناپولیتن",
       "category": "نیمه‌آماده گوشتی",
       "batchDescription": "",
-      "yieldQuantity": 1000,
-      "yieldUnit": "عدد",
-      "cookingLossPercentage": 0,
+      "yieldQuantity": 5701,
+      "yieldUnit": "گرم",
+      "cookingLossPercentage": 5,
       "customConversions": [],
       "ingredients": [
         {
@@ -241,6 +257,12 @@
           "materialId": "mat-1793563646243",
           "quantity": 1,
           "unit": "گرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1794061342617",
+          "quantity": 4,
+          "unit": "لیتر"
         }
       ]
     },
@@ -540,6 +562,11 @@
       "id": "u-1793559393005",
       "name": "دسته",
       "category": "تعدادی"
+    },
+    {
+      "id": "u-1794061837742",
+      "name": "چونه خمیر ناپل",
+      "category": "وزنی"
     }
   ],
   "conversionChains": [
@@ -580,6 +607,20 @@
         {
           "amount": 15000,
           "unit": "میلی‌لیتر"
+        }
+      ]
+    },
+    {
+      "id": "chain-1794061879602",
+      "title": "تبدیل چونه خمیر ناپل به گرم",
+      "steps": [
+        {
+          "amount": 1,
+          "unit": "چونه خمیر ناپل"
+        },
+        {
+          "amount": 320,
+          "unit": "گرم"
         }
       ]
     }

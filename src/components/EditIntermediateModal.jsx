@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Plus, Trash2, Layers, Check, Info, Flame, Scale, Sparkles } from 'lucide-react';
+import { X, Plus, Trash2, Layers, Check, Info, Flame, Scale, Sparkles, PieChart } from 'lucide-react';
 import NumericInput from './NumericInput.jsx';
 import { formatToman, toPersianDigits, formatNumber } from '../utils.js';
 import {
@@ -43,12 +43,19 @@ export default function EditIntermediateModal({
     batchDescription: '',
     cookingLossPercentage: '0',
     ingredients: [],
+    outputUnits: [],
   });
 
   const [newItem, setNewItem] = useState({
     type: 'raw',
     id: '',
     quantity: '',
+    unit: 'گرم',
+  });
+
+  const [newOutputUnit, setNewOutputUnit] = useState({
+    name: '',
+    amount: '',
     unit: 'گرم',
   });
 
@@ -130,6 +137,20 @@ export default function EditIntermediateModal({
     const yieldQty = computed.yieldQuantity || 1;
     const unitCost = yieldQty > 0 ? Math.round(totalBatchCost / yieldQty) : totalBatchCost;
 
+    // Calculate metrics for each output unit (portions)
+    const calculatedOutputUnits = (formData.outputUnits || []).map((ou) => {
+      const portionAmount = Number(ou.amount || ou.weight) || 1;
+      const countPerBatch = portionAmount > 0 && yieldQty > 0 ? Number((yieldQty / portionAmount).toFixed(2)) : 0;
+      const costPerPortion = Math.round(portionAmount * unitCost);
+      return {
+        ...ou,
+        amount: portionAmount,
+        unit: ou.unit || computed.yieldUnit || 'گرم',
+        countPerBatch,
+        costPerPortion,
+      };
+    });
+
     return {
       rawTotal: computed.rawTotal,
       yieldQuantity: yieldQty,
@@ -138,8 +159,9 @@ export default function EditIntermediateModal({
       totalBatchCost,
       unitCost,
       ingredientsWithCost,
+      calculatedOutputUnits,
     };
-  }, [formData.ingredients, formData.cookingLossPercentage, materialsMap, intermediatesMap, globalConversions]);
+  }, [formData.ingredients, formData.cookingLossPercentage, formData.outputUnits, materialsMap, intermediatesMap, globalConversions]);
 
   // Sync state on intermediate prop change
   useEffect(() => {
@@ -158,6 +180,14 @@ export default function EditIntermediateModal({
               unit: ing.unit,
             }))
           : [],
+        outputUnits: Array.isArray(intermediate.outputUnits)
+          ? intermediate.outputUnits.map((ou) => ({
+              id: ou.id || `out-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+              name: ou.name || '',
+              amount: ou.amount !== undefined ? ou.amount : ou.weight || '',
+              unit: ou.unit || intermediate.yieldUnit || 'گرم',
+            }))
+          : [],
       });
     } else {
       setFormData({
@@ -166,6 +196,7 @@ export default function EditIntermediateModal({
         batchDescription: '',
         cookingLossPercentage: '0',
         ingredients: [],
+        outputUnits: [],
       });
     }
 
@@ -173,6 +204,12 @@ export default function EditIntermediateModal({
       type: 'raw',
       id: '',
       quantity: '',
+      unit: 'گرم',
+    });
+
+    setNewOutputUnit({
+      name: '',
+      amount: '',
       unit: 'گرم',
     });
   }, [intermediate, isOpen, defaultCategory]);
@@ -211,6 +248,36 @@ export default function EditIntermediateModal({
     setFormData((prev) => ({ ...prev, ingredients: list }));
   };
 
+  const handleAddOutputUnit = () => {
+    if (!newOutputUnit.name.trim() || !newOutputUnit.amount || Number(newOutputUnit.amount) <= 0) {
+      return;
+    }
+
+    const entry = {
+      id: `out-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: newOutputUnit.name.trim(),
+      amount: Number(newOutputUnit.amount),
+      unit: newOutputUnit.unit || batchCalculation.yieldUnit || 'گرم',
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      outputUnits: [...(prev.outputUnits || []), entry],
+    }));
+
+    setNewOutputUnit({
+      name: '',
+      amount: '',
+      unit: batchCalculation.yieldUnit || 'گرم',
+    });
+  };
+
+  const handleRemoveOutputUnit = (index) => {
+    const list = [...(formData.outputUnits || [])];
+    list.splice(index, 1);
+    setFormData((prev) => ({ ...prev, outputUnits: list }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.ingredients.length === 0) {
@@ -220,6 +287,7 @@ export default function EditIntermediateModal({
 
     onSave({
       ...formData,
+      outputUnits: formData.outputUnits || [],
       yieldQuantity: batchCalculation.yieldQuantity,
       yieldUnit: batchCalculation.yieldUnit,
       cookingLossPercentage: Number(formData.cookingLossPercentage) || 0,
@@ -338,6 +406,102 @@ export default function EditIntermediateModal({
                   بهای هر ۱ {batchCalculation.yieldUnit}: <strong>{formatNumber(batchCalculation.unitCost)} ت</strong>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Output Units & Portioning Section */}
+          <div className="bg-amber-500/5 p-4 rounded-2xl border border-amber-300/80 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-950">
+                <PieChart className="w-4 h-4 text-amber-600" />
+                <span>واحدهای خروجی و پورشن‌بندی بچ (چونه، پرس، برش و پورشن‌ها)</span>
+              </div>
+              <span className="text-[11px] text-amber-800 font-medium">
+                (اختیاری: جهت استفاده آسان در رسپی محصولات نهایی)
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              اگر خروجی این بچ به صورت قطعات مشخص (مثل چونه خمیر، پورشن گوشت، یا اسلایس) آماده می‌شود، نام و وزن هر واحد را وارد کنید تا تعداد در هر بچ و بهای تمام‌شده هر پورشن به شکل خودکار محاسبه شود:
+            </p>
+
+            {/* Output Units List */}
+            {batchCalculation.calculatedOutputUnits && batchCalculation.calculatedOutputUnits.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {batchCalculation.calculatedOutputUnits.map((ou, idx) => (
+                  <div
+                    key={ou.id || idx}
+                    className="bg-white border border-amber-200 rounded-xl p-3 shadow-2xs flex items-center justify-between gap-2"
+                  >
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-900 text-xs truncate">{ou.name}</span>
+                        <span className="text-[10px] bg-amber-100 text-amber-900 font-mono px-1.5 py-0.2 rounded-md font-semibold">
+                          {toPersianDigits(ou.amount)} {ou.unit}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                        <span>خروجی از بچ: <strong className="text-slate-800 font-mono">{toPersianDigits(ou.countPerBatch)}</strong> عدد</span>
+                        <span>•</span>
+                        <span>بهای هر واحد: <strong className="text-amber-700 font-mono">{formatNumber(ou.costPerPortion)} ت</strong></span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveOutputUnit(idx)}
+                      className="text-red-400 hover:text-red-600 p-1.5 transition cursor-pointer rounded-lg hover:bg-red-50"
+                      title="حذف این واحد خروجی"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add Output Unit Row */}
+            <div className="bg-white p-3 rounded-xl border border-amber-200/90 flex flex-wrap items-center gap-2 shadow-2xs">
+              <div className="flex-1 min-w-[130px]">
+                <input
+                  type="text"
+                  placeholder="نام واحد (مثلاً: چونه، پورشن رومن)"
+                  value={newOutputUnit.name}
+                  onChange={(e) => setNewOutputUnit({ ...newOutputUnit, name: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="w-24">
+                <NumericInput
+                  placeholder="وزن/مقدار"
+                  value={newOutputUnit.amount}
+                  onChange={(val) => setNewOutputUnit({ ...newOutputUnit, amount: val })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-900 font-mono focus:bg-white focus:ring-1 focus:ring-amber-500 text-center"
+                />
+              </div>
+
+              <div className="w-20">
+                <select
+                  value={newOutputUnit.unit}
+                  onChange={(e) => setNewOutputUnit({ ...newOutputUnit, unit: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 font-semibold cursor-pointer"
+                >
+                  <option value="گرم">گرم</option>
+                  <option value="کیلوگرم">کیلوگرم</option>
+                  <option value="میلی‌لیتر">میلی‌لیتر</option>
+                  <option value="لیتر">لیتر</option>
+                  <option value="عدد">عدد</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddOutputUnit}
+                className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition shadow-2xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>افزودن واحد</span>
+              </button>
             </div>
           </div>
 

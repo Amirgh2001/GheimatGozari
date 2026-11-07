@@ -303,7 +303,8 @@ export default function FinalProductsView({
                     key={i}
                     className="bg-white px-2 py-0.5 rounded-md border border-slate-200 font-mono text-slate-700"
                   >
-                    {item.name} ({toPersianDigits(item.quantity)} {item.unit})
+                    {item.name} ({toPersianDigits(item.quantity)} {item.unit}
+                    {item.portionAmount ? ` [معادل ${toPersianDigits(Number(item.quantity) * Number(item.portionAmount))} ${item.portionUnit || 'گرم'}]` : ''})
                   </span>
                 ))}
               </div>

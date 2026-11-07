@@ -232,7 +232,12 @@ export default function RecipeBookView({
                           </div>
                         </td>
                         <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
-                          {toPersianDigits(item.quantity)} {item.unit}
+                          <div>{toPersianDigits(item.quantity)} {item.unit}</div>
+                          {item.portionAmount ? (
+                            <span className="text-[10px] text-amber-700 font-normal block font-sans">
+                              (معادل {toPersianDigits(Number(item.quantity) * Number(item.portionAmount))} {item.portionUnit || 'گرم'})
+                            </span>
+                          ) : null}
                         </td>
                         <td className="py-2.5 px-3 font-mono text-slate-600">
                           {isInter

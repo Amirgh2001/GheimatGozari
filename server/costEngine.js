@@ -201,6 +201,13 @@ export function getValidUnitsForIntermediate(intermediate) {
   if (!intermediate) return ['گرم', 'کیلوگرم', 'عدد'];
   const unitsSet = new Set();
 
+  // Add custom output units (portions) first so they appear prominently
+  for (const ou of intermediate.outputUnits || []) {
+    if (ou && ou.name && ou.name.trim()) {
+      unitsSet.add(ou.name.trim());
+    }
+  }
+
   const yUnit = intermediate.yieldUnit || 'گرم';
   unitsSet.add(yUnit);
 
@@ -418,7 +425,27 @@ export function calculateBatchYield(
       }
     } else if (ing.type === 'intermediate' || ing.intermediateId) {
       const child = allIntermediatesMap.get(ing.intermediateId || ing.id);
-      const convertedG = convertUnit(qty, ing.unit, 'گرم', child?.customConversions || [], globalConversions);
+      let effectiveQty = qty;
+      let effectiveUnit = ing.unit;
+
+      const childOutput = (child?.outputUnits || []).find(
+        (ou) => ou && ou.name && ou.name.trim() === ing.unit?.trim()
+      );
+      if (childOutput) {
+        effectiveQty = qty * Number(childOutput.amount || childOutput.weight || 1);
+        effectiveUnit = childOutput.unit || child?.yieldUnit || 'گرم';
+      }
+
+      const customConvs = [
+        ...(child?.customConversions || []),
+        ...(child?.outputUnits || []).map((ou) => ({
+          fromUnit: ou.name,
+          toUnit: ou.unit || child?.yieldUnit || 'گرم',
+          factor: Number(ou.amount || ou.weight || 1),
+        })),
+      ];
+
+      const convertedG = convertUnit(effectiveQty, effectiveUnit, 'گرم', customConvs, globalConversions);
       if (convertedG > 0) {
         totalRawWeightGrams += convertedG;
         hasWeightItems = true;
@@ -561,13 +588,34 @@ export function calculateIntermediateGoodCost(
       const childYieldUnit = childCostResult.yieldUnit;
       const childUnitCost = childCostResult.unitCost;
 
-      const convertedChildQty = convertUnit(
-        ing.quantity,
-        ing.unit,
-        childYieldUnit,
-        intermediate.customConversions || [],
-        globalConversions
+      const outputUnit = (childCostResult.outputUnits || []).find(
+        (ou) => ou && ou.name && ou.name.trim() === ing.unit?.trim()
       );
+
+      let convertedChildQty = 0;
+      let portionAmount = null;
+      let portionUnit = null;
+
+      if (outputUnit) {
+        portionAmount = Number(outputUnit.amount || outputUnit.weight || 1);
+        portionUnit = outputUnit.unit || childYieldUnit || 'گرم';
+        const effectiveWeight = Number(ing.quantity) * portionAmount;
+        convertedChildQty = convertUnit(
+          effectiveWeight,
+          portionUnit,
+          childYieldUnit,
+          childCostResult.customConversions || [],
+          globalConversions
+        );
+      } else {
+        convertedChildQty = convertUnit(
+          ing.quantity,
+          ing.unit,
+          childYieldUnit,
+          intermediate.customConversions || [],
+          globalConversions
+        );
+      }
 
       const subtotal = Math.round(convertedChildQty * childUnitCost);
       totalBatchCost += subtotal;
@@ -579,6 +627,8 @@ export function calculateIntermediateGoodCost(
         category: 'کالای واسط',
         quantity: ing.quantity,
         unit: ing.unit,
+        portionAmount,
+        portionUnit,
         childYieldUnit,
         childUnitCost,
         calculatedCost: subtotal,
@@ -613,6 +663,21 @@ export function calculateIntermediateGoodCost(
     costPercentage: totalBatchCost > 0 ? Number(((item.calculatedCost / totalBatchCost) * 100).toFixed(1)) : 0,
   }));
 
+  // Calculate metrics for each output unit (portions)
+  const calculatedOutputUnits = (intermediate.outputUnits || []).map((ou) => {
+    const portionWeight = Number(ou.amount || ou.weight) || 1;
+    const countPerBatch = portionWeight > 0 && yieldQuantity > 0 ? Number((yieldQuantity / portionWeight).toFixed(2)) : 0;
+    const costPerPortion = Math.round(portionWeight * unitCost);
+    return {
+      id: ou.id,
+      name: ou.name,
+      amount: portionWeight,
+      unit: ou.unit || yieldUnit,
+      countPerBatch,
+      costPerPortion,
+    };
+  });
+
   visited.delete(intermediateId);
 
   return {
@@ -625,6 +690,8 @@ export function calculateIntermediateGoodCost(
     cookingLossPercentage: cookingLossPercent,
     totalBatchCost,
     unitCost,
+    outputUnits: intermediate.outputUnits || [],
+    calculatedOutputUnits,
     customConversions: intermediate.customConversions || [],
     ingredients: ingredientsWithPercentage,
   };
@@ -669,13 +736,34 @@ export function calculateProductCost(product, allIntermediatesMap, allMaterialsM
         globalConversions
       );
 
-      const convertedQty = convertUnit(
-        item.quantity,
-        item.unit,
-        interCostResult.yieldUnit,
-        [],
-        globalConversions
+      const outputUnit = (interCostResult.outputUnits || []).find(
+        (ou) => ou && ou.name && ou.name.trim() === item.unit?.trim()
       );
+
+      let convertedQty = 0;
+      let portionAmount = null;
+      let portionUnit = null;
+
+      if (outputUnit) {
+        portionAmount = Number(outputUnit.amount || outputUnit.weight || 1);
+        portionUnit = outputUnit.unit || interCostResult.yieldUnit || 'گرم';
+        const effectiveWeight = Number(item.quantity) * portionAmount;
+        convertedQty = convertUnit(
+          effectiveWeight,
+          portionUnit,
+          interCostResult.yieldUnit,
+          interCostResult.customConversions || [],
+          globalConversions
+        );
+      } else {
+        convertedQty = convertUnit(
+          item.quantity,
+          item.unit,
+          interCostResult.yieldUnit,
+          interCostResult.customConversions || [],
+          globalConversions
+        );
+      }
 
       const subtotal = Math.round(convertedQty * interCostResult.unitCost);
       foodCost += subtotal;
@@ -687,6 +775,9 @@ export function calculateProductCost(product, allIntermediatesMap, allMaterialsM
         category: 'کالای واسط',
         quantity: item.quantity,
         unit: item.unit,
+        portionAmount,
+        portionUnit,
+        outputUnitMatch: outputUnit ? outputUnit.name : null,
         unitCost: interCostResult.unitCost,
         yieldUnit: interCostResult.yieldUnit,
         calculatedCost: subtotal,

@@ -47,6 +47,7 @@ router.post('/', requireManagerAuth, (req, res) => {
     yieldQuantity,
     yieldUnit,
     cookingLossPercentage,
+    outputUnits,
     customConversions,
     ingredients,
   } = req.body;
@@ -79,6 +80,7 @@ router.post('/', requireManagerAuth, (req, res) => {
     yieldQuantity: finalYieldQty,
     yieldUnit: finalYieldUnit,
     cookingLossPercentage: Number(cookingLossPercentage) || 0,
+    outputUnits: Array.isArray(outputUnits) ? outputUnits : [],
     customConversions: Array.isArray(customConversions) ? customConversions : [],
     ingredients: Array.isArray(ingredients) ? ingredients : [],
   };
@@ -96,7 +98,7 @@ router.post('/', requireManagerAuth, (req, res) => {
 // Update intermediate good
 router.put('/:id', requireManagerAuth, (req, res) => {
   const { id } = req.params;
-  const index = db.data.intermediateGoods.findIndex((i) => i.id === id);
+  const index = db.data.intermediateGoods.findIndex((p) => p.id === id);
 
   if (index === -1) {
     return res.status(404).json({ error: 'کالای واسط یافت نشد.' });
@@ -110,6 +112,7 @@ router.put('/:id', requireManagerAuth, (req, res) => {
     yieldQuantity,
     yieldUnit,
     cookingLossPercentage,
+    outputUnits,
     customConversions,
     ingredients,
   } = req.body;
@@ -121,6 +124,7 @@ router.put('/:id', requireManagerAuth, (req, res) => {
   if (category !== undefined) existing.category = String(category).trim();
   if (batchDescription !== undefined) existing.batchDescription = String(batchDescription).trim();
   if (cookingLossPercentage !== undefined) existing.cookingLossPercentage = Number(cookingLossPercentage) || 0;
+  if (outputUnits !== undefined) existing.outputUnits = Array.isArray(outputUnits) ? outputUnits : [];
   if (customConversions !== undefined) existing.customConversions = customConversions;
   if (ingredients !== undefined) existing.ingredients = ingredients;
 
