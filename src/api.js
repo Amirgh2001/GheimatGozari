@@ -95,7 +95,31 @@ export const api = {
   deleteConversion: (id) => request(`/units/conversions/${id}`, { method: 'DELETE' }),
 
   // Data / Backup
-  exportDataUrl: () => `${BASE_URL}/data/export`,
+  exportDataUrl: (format = 'json') => `${BASE_URL}/data/export${format === 'xlsx' ? '?format=xlsx' : ''}`,
+  exportExcelUrl: () => `${BASE_URL}/data/export-excel`,
+  downloadBackup: async (format = 'json') => {
+    const token = getToken();
+    const endpoint = format === 'xlsx' ? '/data/export?format=xlsx' : '/data/export';
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) {
+      throw new Error('خطا در دریافت فایل پشتیبان از سرور.');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = format === 'xlsx' ? `restaurant_costing_backup_${dateStr}.xlsx` : `restaurant_costing_backup_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+  },
   importData: (data) => request('/data/import', { method: 'POST', body: JSON.stringify(data) }),
+  importExcelData: (base64) => request('/data/import', { method: 'POST', body: JSON.stringify({ format: 'xlsx', base64 }) }),
   resetData: () => request('/data/reset', { method: 'POST' }),
 };

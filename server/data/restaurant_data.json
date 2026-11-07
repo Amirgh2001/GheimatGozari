@@ -2,7 +2,7 @@
   "meta": {
     "appName": "سامانه جامع قیمت‌گذاری و رسپی‌بوک رستوران",
     "version": "1.0.0",
-    "lastUpdated": "2026-11-07T17:57:32.622Z",
+    "lastUpdated": "2026-11-07T18:40:54.156Z",
     "defaultProfitMultiplier": 2.5
   },
   "manager": {
@@ -538,6 +538,11 @@
         {
           "materialId": "mat-1794074141705",
           "quantity": 1,
+          "unit": "عدد"
+        },
+        {
+          "materialId": "mat-1794074179256",
+          "quantity": 2,
           "unit": "عدد"
         }
       ]

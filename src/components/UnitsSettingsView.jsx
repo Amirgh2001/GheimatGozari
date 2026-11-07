@@ -17,6 +17,9 @@ import {
   Check,
   ArrowLeftRight,
   Info,
+  FileSpreadsheet,
+  FileCode,
+  Database,
 } from 'lucide-react';
 import { api } from '../api.js';
 import NumericInput from './NumericInput.jsx';
@@ -26,6 +29,7 @@ export default function UnitsSettingsView({
   unitsData = { standardUnits: [], categories: [], purchaseUnits: [], conversionChains: [] },
   manager = {},
   onRefreshData,
+  onOpenBackupModal,
 }) {
   const [subTab, setSubTab] = useState('chains'); // 'chains', 'units', 'categories', 'security'
 
@@ -247,21 +251,46 @@ export default function UnitsSettingsView({
     }
   };
 
-  const handleFileImport = (e) => {
+  const handleFileImport = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const json = JSON.parse(evt.target.result);
-        await api.importData(json);
-        alert('فایل پشتیبان با موفقیت بازیابی شد.');
-        if (onRefreshData) onRefreshData();
-      } catch (err) {
-        alert('فایل پشتیبان نامعتبر است: ' + err.message);
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const isExcel = ext === 'xlsx' || ext === 'xls';
+    const isJson = ext === 'json';
+
+    if (!isExcel && !isJson) {
+      alert('فرمت فایل پشتیبانی نمی‌شود. لطفاً فایل با پسوند .xlsx یا .json انتخاب فرمایید.');
+      return;
+    }
+
+    if (!window.confirm(`آیا از بازیابی اطلاعات از فایل «${file.name}» اطمینان دارید؟ داده‌های فعلی سامانه با این فایل جایگزین خواهند شد.`)) {
+      return;
+    }
+
+    try {
+      if (isExcel) {
+        const buffer = await file.arrayBuffer();
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = window.btoa(binary);
+        const res = await api.importExcelData(base64);
+        alert(res.message || 'فایل اکسل با موفقیت بازیابی شد.');
+      } else {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        const res = await api.importData(json);
+        alert(res.message || 'فایل JSON با موفقیت بازیابی شد.');
       }
-    };
-    reader.readAsText(file);
+      if (onRefreshData) onRefreshData();
+    } catch (err) {
+      alert('خطا در بازیابی فایل: ' + (err.message || 'فایل نامعتبر است.'));
+    } finally {
+      e.target.value = '';
+    }
   };
 
   return (
@@ -847,40 +876,69 @@ export default function UnitsSettingsView({
           </div>
 
           {/* Database Backup & Restore */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
-            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-              <Download className="w-4 h-4 text-emerald-600" />
-              <span>پشتیبان‌گیری و بازیابی داده‌ها (JSON)</span>
-            </h2>
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-2">
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                <Database className="w-4 h-4 text-emerald-600" />
+                <span>پشتیبان‌گیری و بازیابی داده‌ها (انتخاب اکسل XLSX یا JSON)</span>
+              </h2>
+              {onOpenBackupModal && (
+                <button
+                  type="button"
+                  onClick={onOpenBackupModal}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline flex items-center gap-1 self-start sm:self-auto cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>مرکز پیشرفته پشتیبان‌گیری و بازیابی</span>
+                </button>
+              )}
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              خروجی اکسل شامل ۷ شیت تفکیک‌شده و مرتب با اطلاعات جامع مواد اولیه، کالاهای واسط، رسپی محصولات منو، واحدهای خرید و ضرایب است. همچنین می‌توانید با آپلود مجدد همان فایل اکسل یا فایل JSON، داده‌های سیستم را به سادگی بازیابی نمایید.
+            </p>
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <a
-                href={api.exportDataUrl()}
-                download="restaurant_costing_backup.json"
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              {/* Excel Download Button */}
+              <button
+                type="button"
+                onClick={() => api.downloadBackup('xlsx')}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-xs"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>دانلود نسخه پشتیبان (Export)</span>
-              </a>
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>دانلود نسخه اکسل (.xlsx)</span>
+              </button>
 
-              <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition cursor-pointer border border-slate-200">
-                <Upload className="w-3.5 h-3.5" />
-                <span>بازیابی از فایل (Import)</span>
+              {/* JSON Download Button */}
+              <button
+                type="button"
+                onClick={() => api.downloadBackup('json')}
+                className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              >
+                <FileCode className="w-4 h-4 text-amber-400" />
+                <span>دانلود نسخه جیسان (.json)</span>
+              </button>
+
+              {/* Import Button supporting .xlsx and .json */}
+              <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer border border-slate-200">
+                <Upload className="w-4 h-4 text-indigo-600" />
+                <span>بازیابی از فایل (اکسل یا JSON)</span>
                 <input
                   type="file"
-                  accept=".json"
+                  accept=".xlsx,.xls,.json"
                   onChange={handleFileImport}
                   className="hidden"
                 />
               </label>
 
+              {/* Reset Default Seed */}
               <button
                 type="button"
                 onClick={handleResetSeed}
                 className="bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-xs px-3 py-2 rounded-xl flex items-center gap-1 transition cursor-pointer border border-red-200 mr-auto"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>بازنشانی به داده‌های پیش‌فرض</span>
+                <span>بازنشانی به پیش‌فرض</span>
               </button>
             </div>
           </div>

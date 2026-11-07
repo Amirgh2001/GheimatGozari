@@ -15,6 +15,7 @@ import UnitsSettingsView from './components/UnitsSettingsView.jsx';
 import EditMaterialModal from './components/EditMaterialModal.jsx';
 import EditIntermediateModal from './components/EditIntermediateModal.jsx';
 import EditProductModal from './components/EditProductModal.jsx';
+import BackupRestoreModal from './components/BackupRestoreModal.jsx';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -36,6 +37,7 @@ export default function App() {
   const [materialModal, setMaterialModal] = useState({ open: false, data: null });
   const [intermediateModal, setIntermediateModal] = useState({ open: false, data: null });
   const [productModal, setProductModal] = useState({ open: false, data: null });
+  const [backupModalOpen, setBackupModalOpen] = useState(false);
 
   // Check auth on initial mount
   useEffect(() => {
@@ -247,7 +249,7 @@ export default function App() {
         manager={manager}
         onLogout={handleLogout}
         onOpenSettings={() => setActiveTab('units')}
-        onOpenBackup={() => setActiveTab('units')}
+        onOpenBackup={() => setBackupModalOpen(true)}
         counts={{
           materials: materials.length,
           intermediates: intermediates.length,
@@ -314,6 +316,7 @@ export default function App() {
             unitsData={unitsData}
             manager={manager}
             onRefreshData={fetchData}
+            onOpenBackupModal={() => setBackupModalOpen(true)}
           />
         )}
       </main>
@@ -355,6 +358,12 @@ export default function App() {
         availableUnits={unitsData.purchaseUnits}
         availableCategories={(unitsData.categories || []).filter((c) => c.type === 'product')}
         globalConversions={unitsData.globalConversions || unitsData.conversionChains || []}
+      />
+
+      <BackupRestoreModal
+        isOpen={backupModalOpen}
+        onClose={() => setBackupModalOpen(false)}
+        onRefreshData={fetchData}
       />
 
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print">
