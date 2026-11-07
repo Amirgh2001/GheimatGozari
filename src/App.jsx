@@ -328,6 +328,10 @@ export default function App() {
         intermediate={intermediateModal.data}
         onClose={handleCloseIntermediateModal}
         onSave={handleSaveIntermediate}
+        onNavigateToUnits={() => {
+          handleCloseIntermediateModal();
+          setActiveTab('units');
+        }}
         rawMaterials={materials}
         allIntermediates={intermediates}
         availableUnits={unitsData.purchaseUnits}

@@ -432,7 +432,13 @@ export function calculateBatchYield(
         (ou) => ou && ou.name && ou.name.trim() === ing.unit?.trim()
       );
       if (childOutput) {
-        effectiveQty = qty * Number(childOutput.amount || childOutput.weight || 1);
+        let weight = 0;
+        if (childOutput.name) {
+          const conv = convertUnit(1, childOutput.name, child?.yieldUnit || 'گرم', child?.customConversions || [], globalConversions);
+          if (conv > 0) weight = conv;
+        }
+        if (weight <= 0) weight = Number(childOutput.amount || childOutput.weight || 1);
+        effectiveQty = qty * weight;
         effectiveUnit = childOutput.unit || child?.yieldUnit || 'گرم';
       }
 
@@ -665,7 +671,14 @@ export function calculateIntermediateGoodCost(
 
   // Calculate metrics for each output unit (portions)
   const calculatedOutputUnits = (intermediate.outputUnits || []).map((ou) => {
-    const portionWeight = Number(ou.amount || ou.weight) || 1;
+    let portionWeight = 0;
+    if (ou.name) {
+      const conv = convertUnit(1, ou.name, yieldUnit, intermediate.customConversions || [], globalConversions);
+      if (conv > 0) portionWeight = conv;
+    }
+    if (portionWeight <= 0) {
+      portionWeight = Number(ou.amount || ou.weight) || 1;
+    }
     const countPerBatch = portionWeight > 0 && yieldQuantity > 0 ? Number((yieldQuantity / portionWeight).toFixed(2)) : 0;
     const costPerPortion = Math.round(portionWeight * unitCost);
     return {
@@ -745,7 +758,14 @@ export function calculateProductCost(product, allIntermediatesMap, allMaterialsM
       let portionUnit = null;
 
       if (outputUnit) {
-        portionAmount = Number(outputUnit.amount || outputUnit.weight || 1);
+        let weight = 0;
+        if (outputUnit.name) {
+          const conv = convertUnit(1, outputUnit.name, interCostResult.yieldUnit, interCostResult.customConversions || [], globalConversions);
+          if (conv > 0) weight = conv;
+        }
+        if (weight <= 0) weight = Number(outputUnit.amount || outputUnit.weight || 1);
+
+        portionAmount = weight;
         portionUnit = outputUnit.unit || interCostResult.yieldUnit || 'گرم';
         const effectiveWeight = Number(item.quantity) * portionAmount;
         convertedQty = convertUnit(

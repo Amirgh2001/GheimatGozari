@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Plus, Trash2, Layers, Check, Info, Flame, Scale, Sparkles, PieChart } from 'lucide-react';
+import { X, Plus, Trash2, Layers, Check, Info, Flame, Scale, Sparkles, PieChart, ExternalLink } from 'lucide-react';
 import NumericInput from './NumericInput.jsx';
 import { formatToman, toPersianDigits, formatNumber } from '../utils.js';
 import {
@@ -15,6 +15,7 @@ export default function EditIntermediateModal({
   isOpen,
   onClose,
   onSave,
+  onNavigateToUnits,
   rawMaterials = [],
   allIntermediates = [],
   availableUnits = [],
@@ -53,11 +54,21 @@ export default function EditIntermediateModal({
     unit: 'گرم',
   });
 
-  const [newOutputUnit, setNewOutputUnit] = useState({
-    name: '',
-    amount: '',
-    unit: 'گرم',
-  });
+  // Selectable output units from purchase & counting units + common culinary units
+  const selectableOutputUnits = useMemo(() => {
+    const list = [];
+    for (const u of availableUnits || []) {
+      const name = typeof u === 'string' ? u.trim() : u?.name?.trim();
+      if (name && !list.includes(name)) list.push(name);
+    }
+    const standardAdditions = ['چونه خمیر ناپل', 'چونه', 'پورشن', 'پرس', 'اسلایس', 'برش', 'عدد', 'بسته', 'گرم', 'کیلوگرم'];
+    for (const su of standardAdditions) {
+      if (!list.includes(su)) list.push(su);
+    }
+    return list;
+  }, [availableUnits]);
+
+  const [selectedOutputUnitName, setSelectedOutputUnitName] = useState('');
 
   const availableIntermediates = useMemo(() => {
     return safeAllIntermediates.filter((i) => i && (!intermediate || i.id !== intermediate.id));
@@ -139,7 +150,14 @@ export default function EditIntermediateModal({
 
     // Calculate metrics for each output unit (portions)
     const calculatedOutputUnits = (formData.outputUnits || []).map((ou) => {
-      const portionAmount = Number(ou.amount || ou.weight) || 1;
+      let portionAmount = 0;
+      if (ou.name) {
+        const conv = convertUnit(1, ou.name, computed.yieldUnit || 'گرم', [], globalConversions);
+        if (conv > 0) portionAmount = conv;
+      }
+      if (portionAmount <= 0) {
+        portionAmount = Number(ou.amount || ou.weight) || 1;
+      }
       const countPerBatch = portionAmount > 0 && yieldQty > 0 ? Number((yieldQty / portionAmount).toFixed(2)) : 0;
       const costPerPortion = Math.round(portionAmount * unitCost);
       return {
@@ -162,6 +180,28 @@ export default function EditIntermediateModal({
       calculatedOutputUnits,
     };
   }, [formData.ingredients, formData.cookingLossPercentage, formData.outputUnits, materialsMap, intermediatesMap, globalConversions]);
+
+  // Default selected output unit when selectable list changes
+  useEffect(() => {
+    if (selectableOutputUnits.length > 0 && !selectedOutputUnitName) {
+      const cand = selectableOutputUnits.find(
+        (u) => !['گرم', 'کیلوگرم', 'میلی‌لیتر', 'لیتر'].includes(u)
+      );
+      setSelectedOutputUnitName(cand || selectableOutputUnits[0] || '');
+    }
+  }, [selectableOutputUnits, selectedOutputUnitName]);
+
+  // Live conversion info for selected output unit
+  const currentConversionInfo = useMemo(() => {
+    if (!selectedOutputUnitName) return null;
+    const targetUnit = batchCalculation.yieldUnit || 'گرم';
+    const conv = convertUnit(1, selectedOutputUnitName, targetUnit, [], globalConversions);
+    return {
+      factor: conv,
+      hasConversion: conv > 0,
+      targetUnit,
+    };
+  }, [selectedOutputUnitName, batchCalculation.yieldUnit, globalConversions]);
 
   // Sync state on intermediate prop change
   useEffect(() => {
@@ -206,12 +246,6 @@ export default function EditIntermediateModal({
       quantity: '',
       unit: 'گرم',
     });
-
-    setNewOutputUnit({
-      name: '',
-      amount: '',
-      unit: 'گرم',
-    });
   }, [intermediate, isOpen, defaultCategory]);
 
   if (!isOpen) return null;
@@ -249,27 +283,29 @@ export default function EditIntermediateModal({
   };
 
   const handleAddOutputUnit = () => {
-    if (!newOutputUnit.name.trim() || !newOutputUnit.amount || Number(newOutputUnit.amount) <= 0) {
+    const unitName = selectedOutputUnitName.trim();
+    if (!unitName) return;
+
+    if ((formData.outputUnits || []).some((ou) => ou && ou.name && ou.name.trim() === unitName)) {
+      alert(`واحد خروجی «${unitName}» قبلاً به این کالای واسط اضافه شده است.`);
       return;
     }
 
+    const targetUnit = batchCalculation.yieldUnit || 'گرم';
+    const conv = convertUnit(1, unitName, targetUnit, [], globalConversions);
+    const amount = conv > 0 ? conv : 1;
+
     const entry = {
       id: `out-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      name: newOutputUnit.name.trim(),
-      amount: Number(newOutputUnit.amount),
-      unit: newOutputUnit.unit || batchCalculation.yieldUnit || 'گرم',
+      name: unitName,
+      amount: amount,
+      unit: targetUnit,
     };
 
     setFormData((prev) => ({
       ...prev,
       outputUnits: [...(prev.outputUnits || []), entry],
     }));
-
-    setNewOutputUnit({
-      name: '',
-      amount: '',
-      unit: batchCalculation.yieldUnit || 'گرم',
-    });
   };
 
   const handleRemoveOutputUnit = (index) => {
@@ -411,18 +447,27 @@ export default function EditIntermediateModal({
 
           {/* Output Units & Portioning Section */}
           <div className="bg-amber-500/5 p-4 rounded-2xl border border-amber-300/80 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
+            <div className="flex flex-wrap items-center justify-between pb-2 border-b border-amber-200/60 gap-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-amber-950">
                 <PieChart className="w-4 h-4 text-amber-600" />
-                <span>واحدهای خروجی و پورشن‌بندی بچ (چونه، پرس، برش و پورشن‌ها)</span>
+                <span>واحدهای خروجی و پورشن‌بندی بچ</span>
               </div>
-              <span className="text-[11px] text-amber-800 font-medium">
-                (اختیاری: جهت استفاده آسان در رسپی محصولات نهایی)
-              </span>
+              {onNavigateToUnits && (
+                <button
+                  type="button"
+                  onClick={onNavigateToUnits}
+                  className="bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
+                  title="انتقال به بخش تبدیل واحدها و مقادیر پیش‌فرض"
+                >
+                  <Scale className="w-3.5 h-3.5 text-amber-600" />
+                  <span>برو به تبدیل واحدها و مقادیر پیش‌فرض</span>
+                  <ExternalLink className="w-3 h-3 text-amber-500" />
+                </button>
+              )}
             </div>
 
             <p className="text-[11px] text-slate-600 leading-relaxed">
-              اگر خروجی این بچ به صورت قطعات مشخص (مثل چونه خمیر، پورشن گوشت، یا اسلایس) آماده می‌شود، نام و وزن هر واحد را وارد کنید تا تعداد در هر بچ و بهای تمام‌شده هر پورشن به شکل خودکار محاسبه شود:
+              واحد خروجی مورد نظر را از میان <strong>واحدهای خرید و شمارش</strong> انتخاب کنید. گرماژ هر واحد مستقیماً بر اساس جدول <strong>تبدیل واحدها</strong> خوانده شده و تعداد در هر بچ و بهای تمام‌شده هر واحد به شکل خودکار محاسبه می‌شود:
             </p>
 
             {/* Output Units List */}
@@ -459,49 +504,61 @@ export default function EditIntermediateModal({
               </div>
             )}
 
-            {/* Add Output Unit Row */}
-            <div className="bg-white p-3 rounded-xl border border-amber-200/90 flex flex-wrap items-center gap-2 shadow-2xs">
-              <div className="flex-1 min-w-[130px]">
-                <input
-                  type="text"
-                  placeholder="نام واحد (مثلاً: چونه، پورشن رومن)"
-                  value={newOutputUnit.name}
-                  onChange={(e) => setNewOutputUnit({ ...newOutputUnit, name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white focus:ring-1 focus:ring-amber-500"
-                />
-              </div>
-
-              <div className="w-24">
-                <NumericInput
-                  placeholder="وزن/مقدار"
-                  value={newOutputUnit.amount}
-                  onChange={(val) => setNewOutputUnit({ ...newOutputUnit, amount: val })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-900 font-mono focus:bg-white focus:ring-1 focus:ring-amber-500 text-center"
-                />
-              </div>
-
-              <div className="w-20">
+            {/* Add Output Unit Row (Dropdown from purchase & counting units) */}
+            <div className="bg-white p-3.5 rounded-xl border border-amber-200/90 space-y-2.5 shadow-2xs">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                  انتخاب واحد خروجی:
+                </span>
                 <select
-                  value={newOutputUnit.unit}
-                  onChange={(e) => setNewOutputUnit({ ...newOutputUnit, unit: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 font-semibold cursor-pointer"
+                  value={selectedOutputUnitName}
+                  onChange={(e) => setSelectedOutputUnitName(e.target.value)}
+                  className="flex-1 min-w-[170px] bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 font-bold focus:bg-white focus:ring-1 focus:ring-amber-500 cursor-pointer"
                 >
-                  <option value="گرم">گرم</option>
-                  <option value="کیلوگرم">کیلوگرم</option>
-                  <option value="میلی‌لیتر">میلی‌لیتر</option>
-                  <option value="لیتر">لیتر</option>
-                  <option value="عدد">عدد</option>
+                  <option value="">-- انتخاب از میان واحدهای تعریف‌شده --</option>
+                  {selectableOutputUnits.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
                 </select>
+
+                <button
+                  type="button"
+                  onClick={handleAddOutputUnit}
+                  disabled={!selectedOutputUnitName}
+                  className="bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition shadow-2xs whitespace-nowrap"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>افزودن به واحدهای خروجی</span>
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={handleAddOutputUnit}
-                className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition shadow-2xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>افزودن واحد</span>
-              </button>
+              {/* Live Conversion Status / Helper */}
+              {selectedOutputUnitName && (
+                <div>
+                  {currentConversionInfo?.hasConversion ? (
+                    <div className="text-[11px] text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center justify-between font-mono">
+                      <span>✓ ضریب تبدیل ثبت‌شده: ۱ {selectedOutputUnitName} = {toPersianDigits(currentConversionInfo.factor)} {currentConversionInfo.targetUnit} (از بخش تبدیل واحدها)</span>
+                      <span>تعداد در این بچ: <strong>{toPersianDigits(Number((batchCalculation.yieldQuantity / currentConversionInfo.factor).toFixed(2)))}</strong> عدد</span>
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-amber-900 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 flex flex-wrap items-center justify-between gap-1">
+                      <span>⚠️ برای واحد «{selectedOutputUnitName}» هنوز تبدیل به گرم در سیستم ثبت نشده است.</span>
+                      {onNavigateToUnits && (
+                        <button
+                          type="button"
+                          onClick={onNavigateToUnits}
+                          className="text-amber-800 underline font-bold cursor-pointer hover:text-amber-950 flex items-center gap-1"
+                        >
+                          <span>برو به تبدیل واحدها و ثبت ضریب (مثلاً ۱ {selectedOutputUnitName} = ۳۳۰ گرم)</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

@@ -409,7 +409,13 @@ export function calculateBatchYield(
         (ou) => ou && ou.name && ou.name.trim() === ing.unit?.trim()
       );
       if (childOutput) {
-        effectiveQty = qty * Number(childOutput.amount || childOutput.weight || 1);
+        let weight = 0;
+        if (childOutput.name) {
+          const conv = convertUnit(1, childOutput.name, child?.yieldUnit || 'گرم', child?.customConversions || [], globalConversions);
+          if (conv > 0) weight = conv;
+        }
+        if (weight <= 0) weight = Number(childOutput.amount || childOutput.weight || 1);
+        effectiveQty = qty * weight;
         effectiveUnit = childOutput.unit || child?.yieldUnit || 'گرم';
       }
 

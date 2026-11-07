@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { X, Plus, Trash2, ShoppingBag, Check, Package, Utensils, Percent } from 'lucide-react';
 import NumericInput from './NumericInput.jsx';
 import { formatToman, toPersianDigits } from '../utils.js';
-import { getValidUnitsForMaterial, getValidUnitsForIntermediate } from '../costEngine.js';
+import { getValidUnitsForMaterial, getValidUnitsForIntermediate, convertUnit } from '../costEngine.js';
 
 export default function EditProductModal({
   product,
@@ -13,6 +13,7 @@ export default function EditProductModal({
   intermediateGoods = [],
   availableUnits = [],
   availableCategories = [],
+  globalConversions = [],
 }) {
   const safeRawMaterials = Array.isArray(rawMaterials) ? rawMaterials : [];
   const safeIntermediateGoods = Array.isArray(intermediateGoods) ? intermediateGoods : [];
@@ -310,9 +311,15 @@ export default function EditProductModal({
                     ? safeIntermediateGoods.find((i) => i && i.id === item.intermediateId)
                     : safeRawMaterials.find((m) => m && m.id === item.materialId);
 
-                  const matchedOu = isInter && entity?.outputUnits
-                    ? entity.outputUnits.find((ou) => ou && ou.name && ou.name.trim() === item.unit?.trim())
-                    : null;
+                  let matchedWeight = null;
+                  if (isInter && entity) {
+                    const conv = convertUnit(Number(item.quantity), item.unit, entity.yieldUnit || 'گرم', entity.customConversions || [], globalConversions);
+                    if (conv > 0 && item.unit !== entity.yieldUnit) {
+                      matchedWeight = conv;
+                    } else if (matchedOu) {
+                      matchedWeight = Number(item.quantity) * Number(matchedOu.amount || 1);
+                    }
+                  }
 
                   return (
                     <div
@@ -331,9 +338,9 @@ export default function EditProductModal({
                         <span className="text-slate-600 font-mono font-bold">
                           ({toPersianDigits(item.quantity)} {item.unit})
                         </span>
-                        {matchedOu && (
+                        {matchedWeight !== null && (
                           <span className="text-[11px] text-amber-800 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-mono">
-                            معادل {toPersianDigits(Number(item.quantity) * Number(matchedOu.amount))} {matchedOu.unit || entity?.yieldUnit || 'گرم'}
+                            معادل {toPersianDigits(matchedWeight)} {entity?.yieldUnit || 'گرم'}
                           </span>
                         )}
                       </div>
@@ -429,8 +436,13 @@ export default function EditProductModal({
                   if (newRecipeItem.type === 'intermediate') {
                     const inter = safeIntermediateGoods.find((x) => x && x.id === newRecipeItem.id);
                     const ou = inter?.outputUnits?.find((o) => o && o.name && o.name.trim() === u.trim());
-                    if (ou) {
-                      label = `${u} (${toPersianDigits(ou.amount)} ${ou.unit})`;
+                    if (ou || inter) {
+                      const conv = convertUnit(1, u, inter?.yieldUnit || 'گرم', inter?.customConversions || [], globalConversions);
+                      if (conv > 0 && u !== inter?.yieldUnit) {
+                        label = `${u} (${toPersianDigits(conv)} ${inter?.yieldUnit || 'گرم'})`;
+                      } else if (ou) {
+                        label = `${u} (${toPersianDigits(ou.amount)} ${ou.unit || inter?.yieldUnit || 'گرم'})`;
+                      }
                     }
                   }
                   return (
