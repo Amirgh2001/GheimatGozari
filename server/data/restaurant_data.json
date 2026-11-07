@@ -1,0 +1,587 @@
+{
+  "meta": {
+    "appName": "سامانه جامع قیمت‌گذاری و رسپی‌بوک رستوران",
+    "version": "1.0.0",
+    "lastUpdated": "2026-11-02T14:33:21.428Z",
+    "defaultProfitMultiplier": 2.5
+  },
+  "manager": {
+    "username": "admin",
+    "fullName": "مدیر ارشد مجموعه",
+    "salt": "cf6b5b617398181d0a35125ee73f3a3f",
+    "passwordHash": "3bd0ae75e44dd9bc50ca4c0b113f2e5387149a53af108128a1a0a185dc3b1e5b6bab45d86a208f95c98c19bea9a2ad68baf6ae92321ea4eaaed12881de2115db",
+    "phone": "09123456789",
+    "restaurantName": "رستوران و کیچن تخصصی ملل"
+  },
+  "globalUnitConversions": [
+    {
+      "id": "uc-1",
+      "fromUnit": "کیلوگرم",
+      "toUnit": "گرم",
+      "factor": 1000
+    },
+    {
+      "id": "uc-2",
+      "fromUnit": "لیتر",
+      "toUnit": "میلی‌لیتر",
+      "factor": 1000
+    },
+    {
+      "id": "uc-3",
+      "fromUnit": "تن",
+      "toUnit": "کیلوگرم",
+      "factor": 1000
+    },
+    {
+      "id": "uc-4",
+      "fromUnit": "دوجین",
+      "toUnit": "عدد",
+      "factor": 12
+    }
+  ],
+  "rawMaterials": [
+    {
+      "id": "mat-1793559275626",
+      "name": "فیله مرغ خام",
+      "category": "پروتئین",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 450000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "بسته",
+          "toUnit": "کیلوگرم",
+          "factor": 20
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "mat-1793559544650",
+      "name": "جعفری",
+      "category": "سبزیجات و صیفی‌جات",
+      "purchaseUnit": "دسته",
+      "purchasePrice": 20000,
+      "wastagePercentage": 15,
+      "customConversions": [
+        {
+          "fromUnit": "دسته",
+          "toUnit": "گرم",
+          "factor": 80
+        }
+      ],
+      "notes": "دست چین"
+    },
+    {
+      "id": "mat-1793559615668",
+      "name": "روغن زیتون",
+      "category": "روغن و چربی",
+      "purchaseUnit": "بطری",
+      "purchasePrice": 600000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "بطری",
+          "toUnit": "گرم",
+          "factor": 1500
+        }
+      ],
+      "notes": "دست چین"
+    },
+    {
+      "id": "mat-1793563521710",
+      "name": "آرد نول مخصوص",
+      "category": "آرد",
+      "purchaseUnit": "کیسه بزرگ",
+      "purchasePrice": 1800000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "کیسه بزرگ",
+          "toUnit": "کیلوگرم",
+          "factor": 25
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "mat-1793563646243",
+      "name": "مخمر فرانسوی",
+      "category": "نان و شیرینی",
+      "purchaseUnit": "بسته",
+      "purchasePrice": 900000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "بسته",
+          "toUnit": "گرم",
+          "factor": 200
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "mat-1793564249313",
+      "name": "پنیر پیتزا",
+      "category": "لبنیات",
+      "purchaseUnit": "بسته",
+      "purchasePrice": 1500000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "بسته",
+          "toUnit": "کیلوگرم",
+          "factor": 2
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "mat-1793565730731",
+      "name": "سیبزمینی اردبیل",
+      "category": "سبزیجات و صیفی‌جات",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 120000,
+      "wastagePercentage": 20,
+      "customConversions": [],
+      "notes": "قهرمان"
+    },
+    {
+      "id": "mat-1793565899799",
+      "name": "روغن غنچه",
+      "category": "روغن و چربی",
+      "purchaseUnit": "کارتن",
+      "purchasePrice": 7000000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "کارتن",
+          "toUnit": "عدد",
+          "factor": 12
+        },
+        {
+          "fromUnit": "عدد",
+          "toUnit": "میلی‌لیتر",
+          "factor": 1250
+        },
+        {
+          "fromUnit": "کارتن",
+          "toUnit": "لیتر",
+          "factor": 15
+        }
+      ],
+      "notes": "هر کارتن ۱۲ بطری ۱۲۵۰ میلی‌لیتری (مجموع ۱۵ لیتر)"
+    },
+    {
+      "id": "mat-1793624335608",
+      "name": "ادویه سیبزمینی",
+      "category": "چاشنی و سس",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 2500000,
+      "wastagePercentage": 0,
+      "customConversions": [
+        {
+          "fromUnit": "بسته",
+          "toUnit": "گرم",
+          "factor": 500
+        }
+      ],
+      "notes": "مشکدار"
+    }
+  ],
+  "intermediateGoods": [
+    {
+      "id": "inter-1793560016102",
+      "name": "مرغ پاستا",
+      "category": "نیمه‌آماده گوشتی",
+      "batchDescription": "",
+      "yieldQuantity": 1000,
+      "yieldUnit": "گرم",
+      "cookingLossPercentage": 0,
+      "customConversions": [],
+      "ingredients": [
+        {
+          "type": "raw",
+          "materialId": "mat-1793559275626",
+          "quantity": 1,
+          "unit": "کیلوگرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793559544650",
+          "quantity": 1,
+          "unit": "دسته"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793559615668",
+          "quantity": 50,
+          "unit": "گرم"
+        }
+      ]
+    },
+    {
+      "id": "inter-1793564018659",
+      "name": "خمیر ناپولیتن",
+      "category": "نیمه‌آماده گوشتی",
+      "batchDescription": "",
+      "yieldQuantity": 1000,
+      "yieldUnit": "عدد",
+      "cookingLossPercentage": 0,
+      "customConversions": [],
+      "ingredients": [
+        {
+          "type": "raw",
+          "materialId": "mat-1793563521710",
+          "quantity": 2,
+          "unit": "کیلوگرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793563646243",
+          "quantity": 1,
+          "unit": "گرم"
+        }
+      ]
+    },
+    {
+      "id": "inter-1793566518942",
+      "name": "سیبزمینی بلژیکی",
+      "category": "نیمه‌آماده صیفی",
+      "batchDescription": "",
+      "yieldQuantity": 560,
+      "yieldUnit": "گرم",
+      "cookingLossPercentage": 50,
+      "customConversions": [],
+      "ingredients": [
+        {
+          "type": "raw",
+          "materialId": "mat-1793565730731",
+          "quantity": 1000,
+          "unit": "گرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793565899799",
+          "quantity": 100,
+          "unit": "میلی‌لیتر"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793624335608",
+          "quantity": 20,
+          "unit": "گرم"
+        }
+      ]
+    }
+  ],
+  "products": [
+    {
+      "id": "prod-1793564426495",
+      "name": "پیتزا ناپولیتن مرغ و پنیر",
+      "category": "پیتزا",
+      "description": "",
+      "instructions": "",
+      "profitMultiplier": 2.5,
+      "recipeItems": [
+        {
+          "type": "intermediate",
+          "intermediateId": "inter-1793564018659",
+          "quantity": 1,
+          "unit": "عدد"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793564249313",
+          "quantity": 140,
+          "unit": "گرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793559615668",
+          "quantity": 5,
+          "unit": "گرم"
+        },
+        {
+          "type": "intermediate",
+          "intermediateId": "inter-1793560016102",
+          "quantity": 120,
+          "unit": "گرم"
+        }
+      ],
+      "dineInPackaging": [],
+      "takeoutPackaging": []
+    },
+    {
+      "id": "prod-1793629352936",
+      "name": "باکس فیله سوخاری",
+      "category": "سوخاری",
+      "description": "",
+      "instructions": "تست نحوه دررست کردن محصول نهایی",
+      "profitMultiplier": 2.8,
+      "recipeItems": [
+        {
+          "type": "intermediate",
+          "intermediateId": "inter-1793566518942",
+          "quantity": 250,
+          "unit": "گرم"
+        },
+        {
+          "type": "raw",
+          "materialId": "mat-1793559275626",
+          "quantity": 300,
+          "unit": "گرم"
+        }
+      ],
+      "dineInPackaging": [],
+      "takeoutPackaging": [
+        {
+          "materialId": "mat-1793559544650",
+          "quantity": 2,
+          "unit": "عدد"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-1",
+      "name": "پروتئین",
+      "type": "material"
+    },
+    {
+      "id": "cat-2",
+      "name": "سبزیجات و صیفی‌جات",
+      "type": "material"
+    },
+    {
+      "id": "cat-3",
+      "name": "خشکبار و غلات",
+      "type": "material"
+    },
+    {
+      "id": "cat-4",
+      "name": "لبنیات",
+      "type": "material"
+    },
+    {
+      "id": "cat-5",
+      "name": "روغن و چربی",
+      "type": "material"
+    },
+    {
+      "id": "cat-6",
+      "name": "چاشنی و سس",
+      "type": "material"
+    },
+    {
+      "id": "cat-7",
+      "name": "پکیجینگ",
+      "type": "material"
+    },
+    {
+      "id": "cat-8",
+      "name": "نان و شیرینی",
+      "type": "material"
+    },
+    {
+      "id": "cat-9",
+      "name": "نوشیدنی",
+      "type": "material"
+    },
+    {
+      "id": "cat-10",
+      "name": "سایر",
+      "type": "material"
+    },
+    {
+      "id": "cat-11",
+      "name": "نیمه‌آماده گوشتی",
+      "type": "intermediate"
+    },
+    {
+      "id": "cat-12",
+      "name": "نیمه‌آماده صیفی",
+      "type": "intermediate"
+    },
+    {
+      "id": "cat-13",
+      "name": "سس و چاشنی نیمه‌آماده",
+      "type": "intermediate"
+    },
+    {
+      "id": "cat-14",
+      "name": "سوخاری",
+      "type": "product"
+    },
+    {
+      "id": "cat-15",
+      "name": "پاستا",
+      "type": "product"
+    },
+    {
+      "id": "cat-16",
+      "name": "برگر و ساندویچ",
+      "type": "product"
+    },
+    {
+      "id": "cat-17",
+      "name": "پیتزا",
+      "type": "product"
+    },
+    {
+      "id": "cat-18",
+      "name": "پیش‌غذا و سالاد",
+      "type": "product"
+    },
+    {
+      "id": "cat-1793563223248",
+      "name": "آرد",
+      "type": "material"
+    }
+  ],
+  "purchaseUnits": [
+    {
+      "id": "u-1",
+      "name": "کیلوگرم",
+      "category": "وزنی"
+    },
+    {
+      "id": "u-2",
+      "name": "گرم",
+      "category": "وزنی"
+    },
+    {
+      "id": "u-3",
+      "name": "تن",
+      "category": "وزنی"
+    },
+    {
+      "id": "u-4",
+      "name": "لیتر",
+      "category": "حجمی"
+    },
+    {
+      "id": "u-5",
+      "name": "میلی‌لیتر",
+      "category": "حجمی"
+    },
+    {
+      "id": "u-6",
+      "name": "عدد",
+      "category": "تعدادی"
+    },
+    {
+      "id": "u-7",
+      "name": "پرس",
+      "category": "تعدادی"
+    },
+    {
+      "id": "u-8",
+      "name": "بسته",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-9",
+      "name": "کیسه",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-10",
+      "name": "کیسه بزرگ",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-11",
+      "name": "حلب",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-12",
+      "name": "قوطی",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-13",
+      "name": "کارتن",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-14",
+      "name": "کارتن مرغ",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-15",
+      "name": "کارتن تخم مرغ",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-16",
+      "name": "شانه",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-17",
+      "name": "بطری",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-18",
+      "name": "پاکت",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-19",
+      "name": "قالب",
+      "category": "بسته‌بندی"
+    },
+    {
+      "id": "u-1793559393005",
+      "name": "دسته",
+      "category": "تعدادی"
+    }
+  ],
+  "conversionChains": [
+    {
+      "id": "chain-3",
+      "title": "کارتن تخم مرغ به شانه و عدد",
+      "steps": [
+        {
+          "amount": 1,
+          "unit": "کارتن تخم مرغ"
+        },
+        {
+          "amount": 6,
+          "unit": "شانه"
+        },
+        {
+          "amount": 180,
+          "unit": "عدد"
+        }
+      ]
+    },
+    {
+      "id": "chain-1793566439119",
+      "title": "زنجیره تبدیل روغن غنچه",
+      "steps": [
+        {
+          "amount": 1,
+          "unit": "کارتن"
+        },
+        {
+          "amount": 12,
+          "unit": "عدد"
+        },
+        {
+          "amount": 15,
+          "unit": "لیتر"
+        },
+        {
+          "amount": 15000,
+          "unit": "میلی‌لیتر"
+        }
+      ]
+    }
+  ]
+}
