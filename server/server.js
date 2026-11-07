@@ -62,7 +62,7 @@ if (fs.existsSync(DIST_DIR)) {
 }
 
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`=======================================================`);
     console.log(`🚀 سامانه قیمت‌گذاری و رسپی‌بوک رستوران در حال اجراست.`);
     console.log(`📡 سرور API: http://localhost:${PORT}`);
