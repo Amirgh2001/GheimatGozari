@@ -30,8 +30,9 @@ export default function EditIntermediateModal({
     const list = safeCategories.length > 0
       ? safeCategories.map((c) => (typeof c === 'string' ? c : c?.name)).filter(Boolean)
       : ['نیمه‌آماده گوشتی', 'نیمه‌آماده صیفی', 'سس و چاشنی نیمه‌آماده', 'سایر'];
-    if (intermediate?.category && !list.includes(intermediate.category)) {
-      list.unshift(intermediate.category);
+    const interCat = typeof intermediate?.category === 'string' ? intermediate.category.trim() : null;
+    if (interCat && !list.includes(interCat)) {
+      list.unshift(interCat);
     }
     return list.length > 0 ? list : ['نیمه‌آماده گوشتی'];
   }, [safeCategories, intermediate?.category]);
@@ -40,7 +41,7 @@ export default function EditIntermediateModal({
 
   const [formData, setFormData] = useState({
     name: '',
-    category: defaultCategory,
+    category: (typeof intermediate?.category === 'string' && intermediate.category.trim()) || defaultCategory,
     batchDescription: '',
     cookingLossPercentage: '0',
     ingredients: [],
@@ -208,7 +209,7 @@ export default function EditIntermediateModal({
     if (intermediate && intermediate.id) {
       setFormData({
         name: intermediate.name || '',
-        category: intermediate.category || defaultCategory,
+        category: (typeof intermediate.category === 'string' && intermediate.category.trim()) || defaultCategory,
         batchDescription: intermediate.batchDescription || '',
         cookingLossPercentage: intermediate.cookingLossPercentage !== undefined ? String(intermediate.cookingLossPercentage) : '0',
         ingredients: intermediate.ingredients
@@ -232,7 +233,7 @@ export default function EditIntermediateModal({
     } else {
       setFormData({
         name: '',
-        category: intermediate?.category || defaultCategory,
+        category: (typeof intermediate?.category === 'string' && intermediate.category.trim()) || defaultCategory,
         batchDescription: '',
         cookingLossPercentage: '0',
         ingredients: [],

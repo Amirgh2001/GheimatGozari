@@ -2,7 +2,7 @@
   "meta": {
     "appName": "سامانه جامع قیمت‌گذاری و رسپی‌بوک رستوران",
     "version": "1.0.0",
-    "lastUpdated": "2026-11-07T15:40:26.725Z",
+    "lastUpdated": "2026-11-07T17:04:28.234Z",
     "defaultProfitMultiplier": 2.5
   },
   "manager": {
@@ -202,6 +202,26 @@
           "factor": 1
         }
       ],
+      "notes": ""
+    },
+    {
+      "id": "mat-1794071033348",
+      "name": "کرفس",
+      "category": "سبزیجات و صیفی‌جات",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 110000,
+      "wastagePercentage": 10,
+      "customConversions": [],
+      "notes": ""
+    },
+    {
+      "id": "mat-1794071068234",
+      "name": "هویج",
+      "category": "سبزیجات و صیفی‌جات",
+      "purchaseUnit": "کیلوگرم",
+      "purchasePrice": 80000,
+      "wastagePercentage": 5,
+      "customConversions": [],
       "notes": ""
     }
   ],

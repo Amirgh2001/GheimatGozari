@@ -24,8 +24,9 @@ export default function EditProductModal({
     const list = safeCategories.length > 0
       ? safeCategories.map((c) => (typeof c === 'string' ? c : c?.name)).filter(Boolean)
       : ['سوخاری', 'پاستا', 'برگر و ساندویچ', 'پیتزا', 'پیش‌غذا و سالاد', 'نوشیدنی', 'سایر'];
-    if (product?.category && !list.includes(product.category)) {
-      list.unshift(product.category);
+    const prodCat = typeof product?.category === 'string' ? product.category.trim() : null;
+    if (prodCat && !list.includes(prodCat)) {
+      list.unshift(prodCat);
     }
     return list.length > 0 ? list : ['سوخاری'];
   }, [safeCategories, product?.category]);
@@ -42,7 +43,7 @@ export default function EditProductModal({
 
   const [formData, setFormData] = useState({
     name: '',
-    category: defaultCategory,
+    category: (typeof product?.category === 'string' && product.category.trim()) || defaultCategory,
     description: '',
     instructions: '',
     profitMultiplier: '2.5',
@@ -135,7 +136,7 @@ export default function EditProductModal({
 
       setFormData({
         name: product.name || '',
-        category: product.category || defaultCategory,
+        category: (typeof product.category === 'string' && product.category.trim()) || defaultCategory,
         description: product.description || '',
         instructions: product.instructions || '',
         profitMultiplier: product.profitMultiplier !== undefined ? String(product.profitMultiplier) : '2.5',
@@ -146,7 +147,7 @@ export default function EditProductModal({
     } else {
       setFormData({
         name: '',
-        category: product?.category || defaultCategory,
+        category: (typeof product?.category === 'string' && product.category.trim()) || defaultCategory,
         description: '',
         instructions: '',
         profitMultiplier: '2.5',

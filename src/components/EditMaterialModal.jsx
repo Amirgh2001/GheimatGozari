@@ -42,8 +42,9 @@ export default function EditMaterialModal({
     const list = safeCategories.length > 0
       ? safeCategories.map((c) => (typeof c === 'string' ? c : c?.name)).filter(Boolean)
       : ['پروتئین', 'سبزیجات و صیفی‌جات', 'خشکبار و غلات', 'لبنیات', 'روغن و چربی', 'چاشنی و سس', 'پکیجینگ', 'نان و شیرینی', 'نوشیدنی', 'سایر'];
-    if (material?.category && !list.includes(material.category)) {
-      return [material.category, ...list];
+    const matCat = typeof material?.category === 'string' ? material.category.trim() : null;
+    if (matCat && !list.includes(matCat)) {
+      return [matCat, ...list];
     }
     return list;
   }, [safeCategories, material?.category]);
@@ -53,7 +54,7 @@ export default function EditMaterialModal({
   // Form main data
   const [formData, setFormData] = useState({
     name: '',
-    category: defaultCategory,
+    category: (typeof material?.category === 'string' && material.category.trim()) || defaultCategory,
     purchaseUnit: 'کیلوگرم',
     purchasePrice: '',
     wastagePercentage: '0',
@@ -117,7 +118,7 @@ export default function EditMaterialModal({
 
       setFormData({
         name: material.name || '',
-        category: material.category || defaultCategory,
+        category: (typeof material.category === 'string' && material.category.trim()) || defaultCategory,
         purchaseUnit: pUnit,
         purchasePrice: pPrice,
         wastagePercentage: material.wastagePercentage !== undefined ? String(material.wastagePercentage) : '0',
@@ -134,7 +135,7 @@ export default function EditMaterialModal({
         toUnit: 'عدد',
       });
     } else {
-      const initCat = material?.category || defaultCategory;
+      const initCat = (typeof material?.category === 'string' && material.category.trim()) || defaultCategory;
       const initUnit = initCat === 'روغن و چربی' || initCat === 'نوشیدنی' ? 'لیتر' : 'کیلوگرم';
 
       setFormData({

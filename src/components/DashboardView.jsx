@@ -208,7 +208,7 @@ export default function DashboardView({
           </div>
 
           <button
-            onClick={onOpenProductModal}
+            onClick={() => onOpenProductModal && onOpenProductModal()}
             className="self-start sm:self-auto bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />

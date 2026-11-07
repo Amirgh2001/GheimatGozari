@@ -119,8 +119,10 @@ export default function App() {
   };
 
   // Material Modal Handlers
-  const handleOpenAddMaterial = (defaultCategory) =>
-    setMaterialModal({ open: true, data: defaultCategory ? { category: defaultCategory } : null });
+  const handleOpenAddMaterial = (defaultCategory) => {
+    const cat = typeof defaultCategory === 'string' ? defaultCategory.trim() : null;
+    setMaterialModal({ open: true, data: cat ? { category: cat } : null });
+  };
   const handleOpenEditMaterial = (mat) => setMaterialModal({ open: true, data: mat });
   const handleCloseMaterialModal = () => setMaterialModal({ open: false, data: null });
   const handleSaveMaterial = async (formData) => {
@@ -147,8 +149,10 @@ export default function App() {
   };
 
   // Intermediate Modal Handlers
-  const handleOpenAddIntermediate = (defaultCategory) =>
-    setIntermediateModal({ open: true, data: defaultCategory ? { category: defaultCategory } : null });
+  const handleOpenAddIntermediate = (defaultCategory) => {
+    const cat = typeof defaultCategory === 'string' ? defaultCategory.trim() : null;
+    setIntermediateModal({ open: true, data: cat ? { category: cat } : null });
+  };
   const handleOpenEditIntermediate = (inter) => setIntermediateModal({ open: true, data: inter });
   const handleCloseIntermediateModal = () => setIntermediateModal({ open: false, data: null });
   const handleSaveIntermediate = async (formData) => {
@@ -175,8 +179,10 @@ export default function App() {
   };
 
   // Product Modal Handlers
-  const handleOpenAddProduct = (defaultCategory) =>
-    setProductModal({ open: true, data: defaultCategory ? { category: defaultCategory } : null });
+  const handleOpenAddProduct = (defaultCategory) => {
+    const cat = typeof defaultCategory === 'string' ? defaultCategory.trim() : null;
+    setProductModal({ open: true, data: cat ? { category: cat } : null });
+  };
   const handleOpenEditProduct = (prod) => setProductModal({ open: true, data: prod });
   const handleCloseProductModal = () => setProductModal({ open: false, data: null });
   const handleSaveProduct = async (formData) => {
